@@ -1,16 +1,18 @@
 from django.http import JsonResponse
 from common.json import ModelEncoder
 from .models import Attendee
+from django.views.decorators.http import require_http_methods
+import json
 
 
 class AttendeeListEncoder(ModelEncoder):
     model = Attendee
     properties = [
-        # "email",
-        # "name",
-        # "company_name",              # Where is all this
-        # "created",                   # data accessed?
-        # "conference",
+        "email",
+        "name",
+        "company_name",  # Where is all this
+        "created",  # data accessed?
+        "conference",
     ]
 
 
@@ -26,7 +28,27 @@ class AttendeeDetailEncoder(ModelEncoder):
     # def get_extra_data(self)
 
 
+@require_http_methods(["GET", "POST"])
 def api_list_attendees(request, conference_id):
+    if request.method == "GET":
+        attendees = Attendee.objects.all()
+        return JsonResponse(
+            {"attendees": attendees},
+            encoder=AttendeeDetailEncoder,
+            safe=False,
+        )
+    else:
+        content = json.loads(request.body)
+        try:
+            content["Attendee"] = Attendee.objects.get(
+                conference_id=content["attendee"]
+            )
+            attendees = Attendee.object.create(**content)
+        except Attendee.DoesNotExist:
+            return JsonResponse({"message": "attendee invalid"}, status=400)
+        return JsonResponse(
+            attendees, encoder=AttendeeDetailEncoder, safe=False
+        )
     """
     Lists the attendees names and the link to the attendee
     for the specified conference id.
@@ -46,7 +68,6 @@ def api_list_attendees(request, conference_id):
         ]
     }
     """
-    # response = []
     attendees = Attendee.objects.all()
     # for attendee in attendees:
     #     response.append(
@@ -59,6 +80,9 @@ def api_list_attendees(request, conference_id):
 
 
 def api_show_attendee(request, id):
+    attendee = Attendee.objects.get(id=id)
+    return JsonResponse(attendee, encoder=AttendeeDetailEncoder, safe=False)
+
     """
     Returns the details for the Attendee model specified
     by the id parameter.
@@ -78,17 +102,17 @@ def api_show_attendee(request, id):
         }
     }
     """
-    attendee = Attendee.objects.get(id=id)
+    # attendee = Attendee.objects.get(id=id)
 
-    return JsonResponse(
-        {
-            "email": attendee.email,
-            "name": attendee.name,
-            "company_name": attendee.company_name,
-            "created": attendee.created,
-            "conference": {
-                "name": attendee.conference.name,
-                "href": attendee.conference.get_api_url(),
-            },
-        }
-    )
+    # return JsonResponse(
+    #     {
+    #         "email": attendee.email,
+    #         "name": attendee.name,
+    #         "company_name": attendee.company_name,
+    #         "created": attendee.created,
+    #         "conference": {
+    #             "name": attendee.conference.name,
+    #             "href": attendee.conference.get_api_url(),
+    #         },
+    #     }
+    # )

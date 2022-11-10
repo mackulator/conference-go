@@ -34,7 +34,9 @@ def api_show_presentation(request, id):
 @require_http_methods(["GET", "POST"])
 def api_list_presentations(request, conference_id):
     if request.method == "GET":
-        presentations = Presentation.objects.all()
+        presentations = Presentation.objects.filter(
+            conference_id=conference_id
+        )
         return JsonResponse(
             {"presentations": presentations},
             encoder=PresentationDetailEncoder,
@@ -48,7 +50,9 @@ def api_list_presentations(request, conference_id):
             )
             presentations = Presentation.objects.create(**content)
         except Presentation.DoesNotExist:
-            return JsonResponse({"message": "conference invalid"}, status=400)
+            return JsonResponse(
+                {"message": "presentation invalid"}, status=400
+            )
         return JsonResponse(
             presentations, encoder=PresentationDetailEncoder, safe=False
         )

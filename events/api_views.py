@@ -25,11 +25,28 @@ class ConferenceDetailEncoder(ModelEncoder):
     ]
 
 
-def api_list_conferences(request):
-    conferences = Conference.objects.all()
-    return JsonResponse(
-        {"conferences": conferences}, encoder=ConferenceListEncoder, safe=False
-    )
+@require_http_methods(["GET", "POST"])
+def api_list_conferences(request, conference_id):
+    if request.method == "GET":
+        conferences = Conference.objects.all()
+        return JsonResponse(
+            {"conferences": conferences},
+            encoder=ConferenceListEncoder,
+            safe=False,
+        )
+    else:
+        content = json.loads(request.body)
+        try:
+            content["Conference"] = Conference.objects.get(
+                conference_id=content["conference"]
+            )
+            conferences = Conference.objects.create(**content)
+        except Conference.DoesNotExist:
+            return JsonResponse({"message": "conference invalid"}, status=400)
+        return JsonResponse(
+            conferences, encoder=ConferenceDetailEncoder, safe=False
+        )
+
     """
     Lists the conference names and the link to the conference.
 
