@@ -1,9 +1,35 @@
 from django.http import JsonResponse
-
+from common.json import ModelEncoder
 from .models import Conference, Location
+from django.views.decorators.http import require_http_methods
+import json
+
+
+class ConferenceListEncoder(ModelEncoder):
+    model = Conference
+    properties = ["name"]
+
+
+class ConferenceDetailEncoder(ModelEncoder):
+    model = Conference
+    properties = [
+        "name",
+        "description",
+        "max_presentations",
+        "max_attendees",
+        "starts",
+        "ends",
+        "created",
+        "updated",
+        "location",
+    ]
 
 
 def api_list_conferences(request):
+    conferences = Conference.objects.all()
+    return JsonResponse(
+        {"conferences": conferences}, encoder=ConferenceListEncoder, safe=False
+    )
     """
     Lists the conference names and the link to the conference.
 
@@ -22,19 +48,25 @@ def api_list_conferences(request):
         ]
     }
     """
-    response = []
-    conferences = Conference.objects.all()
-    for conference in conferences:
-        response.append(
-            {
-                "name": conference.name,
-                "href": conference.get_api_url(),
-            }
-        )
-    return JsonResponse({"conferences": response})
+    # response = []
+    # conferences = Conference.objects.all()
+    # for conference in conferences:
+    #     response.append(
+    #         {
+    #             "name": conference.name,
+    #             "href": conference.get_api_url(),
+    #         }
+    #     )
+    # return JsonResponse({"conferences": response})
 
 
 def api_show_conference(request, id):
+    conference = Conference.objects.get(id=id)
+    return JsonResponse(
+        conference,
+        encoder=ConferenceDetailEncoder,
+        safe=False,
+    )
     """
     Returns the details for the Conference model specified
     by the id parameter.
@@ -59,26 +91,53 @@ def api_show_conference(request, id):
         }
     }
     """
-    conference = Conference.objects.get(id=id)
-    return JsonResponse(
-        {
-            "name": conference.name,
-            "starts": conference.starts,
-            "ends": conference.ends,
-            "description": conference.description,
-            "created": conference.created,
-            "updated": conference.updated,
-            "max_presentations": conference.max_presentations,
-            "max_attendees": conference.max_attendees,
-            "location": {
-                "name": conference.location.name,
-                "href": conference.location.get_api_url(),
-            },
-        }
-    )
+    # conference = Conference.objects.get(id=id)
+    # return JsonResponse(conference, ConferenceEncoder, safe=False)
+
+    # return JsonResponse(
+    #     {
+    #         "name": conference.name,
+    #         "starts": conference.starts,
+    #         "ends": conference.ends,
+    #         "description": conference.description,
+    #         "created": conference.created,
+    #         "updated": conference.updated,
+    #         "max_presentations": conference.max_presentations,
+    #         "max_attendees": conference.max_attendees,
+    #         "location": {
+    #             "name": conference.location.name,
+    #             "href": conference.location.get_api_url(),
+    #         },
+    #     }
+    # )
+    # list_of_properties = ['name, 'starts', 'ends']
 
 
+@require_http_methods(["GET", "POST"])
 def api_list_locations(request):
+    if request.method == "GET":
+        conferences = Conference.objects.all()
+        return JsonResponse(
+            {"conferences": conferences},
+            encoder=ConferenceListEncoder,
+        )
+    else:
+        content = json.loads(request.body)
+        try:
+            location = Location.objects.get(id=content["location"])
+            content["location"] = location
+        except Location.DoesNotExist:
+            return JsonResponse(
+                {"message": "INVALID location id"},
+                status=400,
+            )
+
+        conference = Conference.objects.create(**content)
+        return JsonResponse(
+            conference,
+            encoder=ConferenceDetailEncoder,
+            safe=False,
+        )
     """
     Lists the location names and the link to the location.
 
@@ -97,19 +156,31 @@ def api_list_locations(request):
         ]
     }
     """
-    response = []
-    locations = Location.objects.all()
-    for location in locations:
-        response.append(
-            {
-                "name": location.name,
-                "href": location.get_api_url(),
-            }
-        )
-    return JsonResponse({"locations": response})
+    # response = []
+    # locations = Location.objects.all()
+    # for location in locations:
+    #     response.append(
+    #         {
+    #             "name": location.name,
+    #             "href": location.get_api_url(),
+    #         }
+    #     )
+    # return JsonResponse({"locations": response})
 
 
 def api_show_location(request, id):
+    location = Location.objects.get(id=id)
+    return JsonResponse(
+        {
+            "name": location.name,
+            "city": location.city,
+            "room_count": location.room_count,
+            "created": location.created,
+            "updated": location.updated,
+            "state": location.state.abbreviation,
+        }
+    )
+
     """
     Returns the details for the Location model specified
     by the id parameter.
@@ -126,14 +197,3 @@ def api_show_location(request, id):
         "state": the two-letter abbreviation for the state,
     }
     """
-    location = Location.objects.get(id=id)
-    return JsonResponse(
-        {
-            "name": location.name,
-            "city": location.city,
-            "room_count": location.room_count,
-            "created": location.created,
-            "updated": location.updated,
-            "state": location.state.abbreviation,
-        }
-    )
