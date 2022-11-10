@@ -26,7 +26,7 @@ class ConferenceDetailEncoder(ModelEncoder):
 
 
 @require_http_methods(["GET", "POST"])
-def api_list_conferences(request, conference_id):
+def api_list_conferences(request):
     if request.method == "GET":
         conferences = Conference.objects.all()
         return JsonResponse(
@@ -103,10 +103,10 @@ def api_show_conference(request, id):
 @require_http_methods(["GET", "POST"])
 def api_list_locations(request):
     if request.method == "GET":
-        conferences = Conference.objects.all()
+        locations = Location.objects.all()
         return JsonResponse(
-            {"conferences": conferences},
-            encoder=ConferenceListEncoder,
+            {"locations": locations},
+            encoder=LocationListEncoder,
         )
     else:
         content = json.loads(request.body)
