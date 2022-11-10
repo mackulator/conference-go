@@ -14,6 +14,18 @@ class AttendeeListEncoder(ModelEncoder):
     ]
 
 
+class AttendeeDetailEncoder(ModelEncoder):
+    model = Attendee
+    properties = [
+        "name",
+        "email",
+        "company_name",
+        "created",
+    ]
+
+    # def get_extra_data(self)
+
+
 def api_list_attendees(request, conference_id):
     """
     Lists the attendees names and the link to the attendee

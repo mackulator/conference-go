@@ -14,14 +14,14 @@ class ConferenceDetailEncoder(ModelEncoder):
     model = Conference
     properties = [
         "name",
-        "description",
-        "max_presentations",
-        "max_attendees",
-        "starts",
-        "ends",
-        "created",
-        "updated",
-        "location",
+        # "description",
+        # "max_presentations",
+        # "max_attendees",
+        # "starts",
+        # "ends",
+        # "created",
+        # "updated",
+        # "location",
     ]
 
 
@@ -48,16 +48,6 @@ def api_list_conferences(request):
         ]
     }
     """
-    # response = []
-    # conferences = Conference.objects.all()
-    # for conference in conferences:
-    #     response.append(
-    #         {
-    #             "name": conference.name,
-    #             "href": conference.get_api_url(),
-    #         }
-    #     )
-    # return JsonResponse({"conferences": response})
 
 
 def api_show_conference(request, id):
@@ -91,26 +81,6 @@ def api_show_conference(request, id):
         }
     }
     """
-    # conference = Conference.objects.get(id=id)
-    # return JsonResponse(conference, ConferenceEncoder, safe=False)
-
-    # return JsonResponse(
-    #     {
-    #         "name": conference.name,
-    #         "starts": conference.starts,
-    #         "ends": conference.ends,
-    #         "description": conference.description,
-    #         "created": conference.created,
-    #         "updated": conference.updated,
-    #         "max_presentations": conference.max_presentations,
-    #         "max_attendees": conference.max_attendees,
-    #         "location": {
-    #             "name": conference.location.name,
-    #             "href": conference.location.get_api_url(),
-    #         },
-    #     }
-    # )
-    # list_of_properties = ['name, 'starts', 'ends']
 
 
 @require_http_methods(["GET", "POST"])

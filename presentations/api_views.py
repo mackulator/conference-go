@@ -17,6 +17,13 @@ class PresentationDetailEncoder(ModelEncoder):
     ]
 
 
+class PresentationEncoder(ModelEncoder):
+    properties = [
+        "presenter_name",
+        "title",
+    ]
+
+
 def api_show_presentation(request, id):
     presentation = Presentation.objects.get(id=id)
     return JsonResponse(
@@ -119,10 +126,3 @@ def api_list_presentations(request, conference_id):
     #         },
     #     },
     # )
-
-
-class PresentationEncoder(ModelEncoder):
-    properties = [
-        "presenter_name",
-        "title",
-    ]
