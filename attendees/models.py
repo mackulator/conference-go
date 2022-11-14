@@ -31,14 +31,6 @@ class Attendee(models.Model):
             self.create_badge
         except ObjectDoesNotExist:
             Badge.objects.create(attendee=self)
-        # try:
-        #     self.badge
-        # except Badge.DoesNotExist:
-        #     badge = Badge.object.create(
-        #         attendee=self,
-        #         badge=badge,
-        #     )
-        #     self.badge.add(badge)
 
 
 class Badge(models.Model):
