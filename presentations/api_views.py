@@ -36,23 +36,31 @@ def api_show_presentation(request, id):
         return JsonResponse({"deleted": count > 0})
     else:
         content = json.loads(request.body)
-        try:
-            if "status" in content:
-                status = Status.objects.get(abbreviation=content["status"])
-                content["status"] = status
-        except Status.DoesNotExist:
-            return JsonResponse(
-                {"message": "Invalid state abbreviation"},
-                status=400,
-            )
+        # try:
+        #     if "status" in content:
+        #         status = Status.objects.get(name=content["status"])
+        #         content["status"] = status
+        # except Status.DoesNotExist:
+        #     return JsonResponse(
+        #         {"message": "Invalid status"},
+        #         status=400,
+        #     )
+        Presentation.objects.filter(id=id).update(**content)
+
+        presentation = Presentation.objects.get(id=id)
+        return JsonResponse(
+            presentation,
+            encoder=PresentationDetailEncoder,
+            safe=False,
+        )
 
 
 @require_http_methods(["GET", "POST"])
 def api_list_presentations(request, conference_id):
     if request.method == "GET":
-        presentations = Presentation.objects.all()
-        # conference_id=conference_id
-        # )
+        presentations = Presentation.objects.filter(
+            conference_id=conference_id
+        )
         return JsonResponse(
             {"presentations": presentations},
             encoder=PresentationDetailEncoder,
@@ -61,16 +69,14 @@ def api_list_presentations(request, conference_id):
     else:
         content = json.loads(request.body)
         try:
-            content["Presentation"] = Presentation.objects.get(
-                conference_id=content["presentation"]
-            )
-            presentations = Presentation.create(**content)
+            content["conference_id"] = conference_id
+            presentation = Presentation.create(**content)
         except Presentation.DoesNotExist:
             return JsonResponse(
-                {"message": "presentation invalid"}, status=400
+                {"message": "conference_id invalid"}, status=400
             )
         return JsonResponse(
-            presentations, encoder=PresentationDetailEncoder, safe=False
+            presentation, encoder=PresentationDetailEncoder, safe=False
         )
     """
     Lists the presentation titles and the link to the
