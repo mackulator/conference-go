@@ -6,13 +6,28 @@ from django.views.decorators.http import require_http_methods
 import json
 
 
-class ConferenceListEncoder(ModelEncoder):
-    model = Conference
+class LocationListEncoder(ModelEncoder):
+    model = Location
     properties = ["name"]
 
 
-class LocationListEncoder(ModelEncoder):
+class LocationDetailEncoder(ModelEncoder):
     model = Location
+    properties = [
+        "name",
+        "city",
+        "room_count",
+        "created",
+        "updated",
+        # "picture_url",
+    ]
+
+    def get_extra_data(self, o):
+        return {"state": o.state.abbreviation}
+
+
+class ConferenceListEncoder(ModelEncoder):
+    model = Conference
     properties = ["name"]
 
 
@@ -32,21 +47,6 @@ class ConferenceDetailEncoder(ModelEncoder):
     encoders = {
         "location": LocationListEncoder(),
     }
-
-
-class LocationDetailEncoder(ModelEncoder):
-    model = Location
-    properties = [
-        "name",
-        "city",
-        "room_count",
-        "created",
-        "updated",
-        "picture_url",
-    ]
-
-    def get_extra_data(self, o):
-        return {"state": o.state.abbreviation}
 
 
 @require_http_methods(["GET", "POST"])
@@ -91,17 +91,20 @@ def api_list_conferences(request):
     """
 
 
+@require_http_methods(["DELETE", "GET", "PUT"])  # do I need these HTTP verbs
 def api_show_conference(request, id):
-    conference = Conference.objects.get(id=id)
-    weather = get_weather(
-        conference.location.city,
-        conference.location.state.abbreviation,
-    )
-    return JsonResponse(
-        {"conference": conference, "weather": weather},
-        encoder=ConferenceDetailEncoder,
-        safe=False,
-    )
+    if request.method == "GET":
+        conference = Conference.objects.get(id=id)
+        # weather = get_weather(
+        #     conference.location.city,
+        #     conference.location.state.abbreviation,
+        # )
+        return JsonResponse(
+            {"conference": conference},
+            # {"conference": conference, "weather": weather},
+            encoder=ConferenceDetailEncoder,
+            safe=False,
+        )
     """
     Returns the details for the Conference model specified
     by the id parameter.
