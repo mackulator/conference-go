@@ -36,15 +36,6 @@ def api_show_presentation(request, id):
         return JsonResponse({"deleted": count > 0})
     else:
         content = json.loads(request.body)
-        # try:
-        #     if "status" in content:
-        #         status = Status.objects.get(name=content["status"])
-        #         content["status"] = status
-        # except Status.DoesNotExist:
-        #     return JsonResponse(
-        #         {"message": "Invalid status"},
-        #         status=400,
-        #     )
         Presentation.objects.filter(id=id).update(**content)
 
         presentation = Presentation.objects.get(id=id)
