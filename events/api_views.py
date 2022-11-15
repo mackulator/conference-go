@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from common.json import ModelEncoder
 from .models import Conference, Location, State
-from .acls import get_photo, get_weather
+from .acls import get_weather, get_photo
 from django.views.decorators.http import require_http_methods
 import json
 
@@ -19,7 +19,7 @@ class LocationDetailEncoder(ModelEncoder):
         "room_count",
         "created",
         "updated",
-        # "picture_url",
+        "picture_url",
     ]
 
     def get_extra_data(self, o):
@@ -95,16 +95,23 @@ def api_list_conferences(request):
 def api_show_conference(request, id):
     if request.method == "GET":
         conference = Conference.objects.get(id=id)
-        # weather = get_weather(
-        #     conference.location.city,
-        #     conference.location.state.abbreviation,
-        # )
+        weather = get_weather(
+            conference.location.city,
+            conference.location.state.abbreviation,
+        )
         return JsonResponse(
-            {"conference": conference},
-            # {"conference": conference, "weather": weather},
+            {"conference": conference, "weather": weather},
             encoder=ConferenceDetailEncoder,
             safe=False,
         )
+    # elif request.method == "DELETE":
+    #     count, _ = Conference.objects.filter(id=id).delete()
+    #     return JsonResponse({"deleted": count > 0})
+    # else:
+    #     content = json.loads(request.body)
+    #     try:
+    #         if "state" in content:
+
     """
     Returns the details for the Conference model specified
     by the id parameter.
@@ -198,7 +205,9 @@ def api_show_location(request, id):
             safe=False,
         )
     elif request.method == "DELETE":
-        count, _ = Location.objects.filter(id=id).delete()
+        count, _ = Location.objects.filter(
+            id=id
+        ).delete()  # why filter and not get if passing id
         return JsonResponse({"deleted": count > 0})
     else:
         content = json.loads(request.body)
