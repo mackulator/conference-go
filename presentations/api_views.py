@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from common.json import ModelEncoder
-from .models import Presentation
+from .models import Presentation, Status
 from django.views.decorators.http import require_http_methods
 import json
 
@@ -24,19 +24,35 @@ class PresentationEncoder(ModelEncoder):
     ]
 
 
+@require_http_methods(["GET", "DELETE", "PUT"])
 def api_show_presentation(request, id):
-    presentation = Presentation.objects.get(id=id)
-    return JsonResponse(
-        presentation, encoder=PresentationDetailEncoder, safe=False
-    )
+    if request.method == "GET":
+        presentation = Presentation.objects.get(id=id)
+        return JsonResponse(
+            presentation, encoder=PresentationDetailEncoder, safe=False
+        )
+    elif request.method == "DELETE":
+        count, _ = Presentation.objects.filter(id=id).delete()
+        return JsonResponse({"deleted": count > 0})
+    else:
+        content = json.loads(request.body)
+        try:
+            if "status" in content:
+                status = Status.objects.get(abbreviation=content["status"])
+                content["status"] = status
+        except Status.DoesNotExist:
+            return JsonResponse(
+                {"message": "Invalid state abbreviation"},
+                status=400,
+            )
 
 
 @require_http_methods(["GET", "POST"])
 def api_list_presentations(request, conference_id):
     if request.method == "GET":
-        presentations = Presentation.objects.filter(
-            conference_id=conference_id
-        )
+        presentations = Presentation.objects.all()
+        # conference_id=conference_id
+        # )
         return JsonResponse(
             {"presentations": presentations},
             encoder=PresentationDetailEncoder,
@@ -48,7 +64,7 @@ def api_list_presentations(request, conference_id):
             content["Presentation"] = Presentation.objects.get(
                 conference_id=content["presentation"]
             )
-            presentations = Presentation.objects.create(**content)
+            presentations = Presentation.create(**content)
         except Presentation.DoesNotExist:
             return JsonResponse(
                 {"message": "presentation invalid"}, status=400
